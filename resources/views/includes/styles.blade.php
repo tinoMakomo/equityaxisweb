@@ -3,7 +3,11 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
 <link rel="stylesheet" href="{{ asset('vendor/bootstrap/css/bootstrap.css') }}">
 <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
-<link rel="stylesheet" href="{{ asset('css/style.css') . '?v=' . (config('app.css_update') ?: @filemtime(public_path('css/style.css'))) }}">
+<link rel="stylesheet" href="{{ asset('css/style.css') . '?v=' . config('app.css_update') . '.' . @filemtime(public_path('css/style.css')) }}">
+<style>
+    .featured { position: relative; overflow: hidden; }
+    .featured > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+</style>
 
 @if (\Helper::isArchive())
     <style>
