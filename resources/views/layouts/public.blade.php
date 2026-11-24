@@ -61,6 +61,7 @@
 </head>
 
 <body>
+    <div class="sidebar-backdrop"></div>
     @include('includes.sidebar')
     @include('includes.header-top')
     @include('includes.header')
@@ -79,6 +80,9 @@
         </div>
     </div>
     @include('includes.footer')
+    <button type="button" id="back-to-top" aria-label="Back to top" title="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
     @include('includes.scripts')
 </body>
 

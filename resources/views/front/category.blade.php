@@ -47,7 +47,7 @@
             @endif
 
             <a href="{{ Helper::getAdUrl('article_aside') }}">
-                <img src="{{ Helper::getAd('article_aside') }}" class="img ad mb-md-2" style="width: 100%">
+                <img src="{{ Helper::getAd('article_aside') }}" alt="Advertisement" loading="lazy" decoding="async" class="img ad mb-md-2" style="width: 100%">
             </a>
 
         </div>

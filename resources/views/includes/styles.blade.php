@@ -1,8 +1,9 @@
-<link rel="stylesheet" href="{{ asset('vendor/owlcarousel/assets/owl.carousel.min.css') }}">
-<link rel="stylesheet" href="{{ asset('vendor/owlcarousel/assets/owl.theme.default.min.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
 <link rel="stylesheet" href="{{ asset('vendor/bootstrap/css/bootstrap.css') }}">
-<link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.css') }}">
-<link rel="stylesheet" href="{{ asset('css/style.css') . '?v=' . config('app.css_update') }}">
+<link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
+<link rel="stylesheet" href="{{ asset('css/style.css') . '?v=' . (config('app.css_update') ?: @filemtime(public_path('css/style.css'))) }}">
 
 @if (\Helper::isArchive())
     <style>

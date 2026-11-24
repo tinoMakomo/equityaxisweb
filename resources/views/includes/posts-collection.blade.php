@@ -16,7 +16,7 @@
         <div class="w-100 sticky-md-top search-sidebar">
             <div class="thick-divider mb-1"></div>
             <a href="{{ Helper::getAdUrl('article_aside') }}">
-                <img src="{{ Helper::getAd('article_aside') }}" class="img ad mb-3 w-100">
+                <img src="{{ Helper::getAd('article_aside') }}" alt="Advertisement" loading="lazy" decoding="async" class="img ad mb-3 w-100">
             </a>
         </div>
     </div>

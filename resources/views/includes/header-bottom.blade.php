@@ -9,9 +9,9 @@
                             @if ($parent->hasChildren())
                                 <a class="nav-link dropdown-toggle {{ Str::contains(Request::url(), 'category/' . $parent->id) ? 'active' : '' }}"
                                     href="{{ route('category', [$parent->id, $parent->slug]) }}"
-                                    id="{{ $parent->name }}" role="button"
+                                    data-mega-target="mega-{{ $parent->id }}" role="button"
                                     aria-expanded="false">{{ Str::upper($parent->name) }}</a>
-                                <div class="dropdown-menu mega-menu" aria-labelledby="world" id="world-dropdown">
+                                <div class="dropdown-menu mega-menu" id="mega-{{ $parent->id }}">
                                     <div class="mega-menu-links">
                                         <ul class="list-unstyled">
                                             <li><a class="mb-2 link" href="#">SECTIONS</a></li>
@@ -59,8 +59,8 @@
                     @endforeach
                 </div>
             </div>
-            <div class="d-flex">
-                <a class="nav-link" href="#">Sign In</a>
+            <div class="d-flex align-items-center">
+                <a class="nav-link" href="{{ route('login') }}">Sign In</a>
                 <a class="nav-link btn btn-primary" href="{{ route('subscribe') }}">Subscribe</a>
             </div>
         </div>

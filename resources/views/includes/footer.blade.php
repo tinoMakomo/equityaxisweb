@@ -79,7 +79,7 @@
                 <div class="thin-divider"></div>
             </div>
             <div class="flex">
-                <a href="/"><img src="{{ asset('images/logos/logo-white.png') }}" class="footer-logo"></a>
+                <a href="/"><img src="{{ asset('images/logos/logo-white.png') }}" alt="Equity Axis" loading="lazy" decoding="async" class="footer-logo"></a>
             </div>
         </div>
     </div>

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Utilities\Helper;
 use App\Models\Subscriber;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Builder;
 use App\Http\Requests\UpdateSubscriberRequest;
 use App\Http\Middleware\AttachParentCategoriesToRequest;
@@ -16,30 +17,68 @@ use App\Models\Feedback;
 
 class FrontController extends Controller
 {
+    private const LISTING_COLUMNS = [
+        'posts.id',
+        'posts.title',
+        'posts.slug',
+        'posts.excerpt',
+        'posts.user_id',
+        'posts.status',
+        'posts.editors_pick',
+        'posts.is_archived',
+        'posts.publish_at',
+        'posts.created_at',
+    ];
 
     public function __construct()
     {
         $this->middleware(AttachParentCategoriesToRequest::class);
     }
 
-    public function index()
+    protected function getTopStories(int $isArchived, int $limit = 8)
+    {
+        $version = Helper::getCacheVersion();
+        $cacheKey = "site:v{$version}:top_stories:{$isArchived}:{$limit}";
+
+        return Cache::remember($cacheKey, 180, function () use ($isArchived, $limit) {
+            return Post::select(self::LISTING_COLUMNS)
+                ->where('status', 'published')
+                ->where('is_archived', $isArchived)
+                ->orderBy('created_at', 'desc')
+                ->with(['categories', 'media'])
+                ->limit($limit)
+                ->get();
+        });
+    }
+
+    public function index(Request $request)
     {
         $isArchived = Helper::getIsArchivedValue();
-        $editorsPick = Post::where('status', 'published')
-            ->where('is_archived', $isArchived)
-            ->where('editors_pick', true)
-            ->with(['categories', 'media'])
-            ->orderBy('created_at', 'desc')
-            ->first();
+        $page = max((int) $request->input('page', 1), 1);
+        $version = Helper::getCacheVersion();
+        $cacheKey = "site:v{$version}:home:{$isArchived}:page:{$page}";
 
-        $posts = Post::where('status', 'published')
-            ->where('is_archived', $isArchived)
-            ->when($editorsPick, function (Builder $query) use ($editorsPick) {
-                $query->where('id', '!=', $editorsPick->id);
-            })
-            ->with(['categories', 'media'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(35);
+        [$editorsPick, $posts] = Cache::remember($cacheKey, 120, function () use ($isArchived) {
+            $editorsPick = Post::select(self::LISTING_COLUMNS)
+                ->where('status', 'published')
+                ->where('is_archived', $isArchived)
+                ->where('editors_pick', true)
+                ->with(['categories', 'media'])
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            $posts = Post::select(self::LISTING_COLUMNS)
+                ->where('status', 'published')
+                ->where('is_archived', $isArchived)
+                ->when($editorsPick, function (Builder $query) use ($editorsPick) {
+                    $query->where('id', '!=', $editorsPick->id);
+                })
+                ->with(['categories', 'media'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(35);
+
+            return [$editorsPick, $posts];
+        });
 
         return view('front.index')->withPosts($posts)->withEditorsPick($editorsPick);
     }
@@ -55,14 +94,16 @@ class FrontController extends Controller
             try {
                 $posts = Post::search($search)
                     ->query(function (Builder $query) use ($isArchived) {
-                        $query->where('status', 'published')
+                        $query->select(self::LISTING_COLUMNS)
+                            ->where('status', 'published')
                             ->where('is_archived', $isArchived)
                             ->with(['categories', 'media']);
                     })
                     ->get();
                 $posts = $this->paginate($posts, 20, null, ['path' => $request->url(), 'query' => $request->query()]);
             } catch (\Throwable $e) {
-                $posts = Post::where('status', 'published')
+                $posts = Post::select(self::LISTING_COLUMNS)
+                    ->where('status', 'published')
                     ->where('is_archived', $isArchived)
                     ->where(function (Builder $query) use ($search) {
                         $query->where('title', 'LIKE', "%{$search}%")
@@ -75,12 +116,7 @@ class FrontController extends Controller
             }
         }
 
-        $topPosts = Post::where('status', 'published')
-            ->where('is_archived', $isArchived)
-            ->orderBy('created_at', 'desc')
-            ->with(['categories', 'media'])
-            ->limit(8)
-            ->get();
+        $topPosts = $this->getTopStories($isArchived, 8);
 
         return view('front.search')->withPosts($posts)->withSearch($search)->withTopPosts($topPosts);
     }
@@ -192,7 +228,8 @@ class FrontController extends Controller
         $category = Category::with('children')->findOrFail($id);
         $categoryIds = $category->getSelfAndChildCategoryIds();
 
-        $posts = Post::whereExists(function ($query) use ($categoryIds) {
+        $posts = Post::select(self::LISTING_COLUMNS)
+            ->whereExists(function ($query) use ($categoryIds) {
                 $query->selectRaw('1')
                     ->from('category_posts')
                     ->whereColumn('category_posts.post_id', 'posts.id')
@@ -216,18 +253,14 @@ class FrontController extends Controller
         $user = User::findOrFail($id);
         $isArchived = Helper::getIsArchivedValue();
 
-        $posts = Post::where('user_id', $id)
+        $posts = Post::select(self::LISTING_COLUMNS)
+            ->where('user_id', $id)
             ->where('status', 'published')
             ->where('is_archived', $isArchived)
             ->with(['categories', 'media'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-        $topPosts = Post::where('status', 'published')
-            ->where('is_archived', $isArchived)
-            ->orderBy('created_at', 'desc')
-            ->with(['categories', 'media'])
-            ->limit(8)
-            ->get();
+        $topPosts = $this->getTopStories($isArchived, 8);
 
         return view('front.author')->withPosts($posts)->withUser($user)->withTopPosts($topPosts);
     }
@@ -236,18 +269,14 @@ class FrontController extends Controller
     {
         $isArchived = Helper::getIsArchivedValue();
 
-        $posts = Post::where('tags', 'LIKE', "%{$tag}%")
+        $posts = Post::select(self::LISTING_COLUMNS)
+            ->where('tags', 'LIKE', "%{$tag}%")
             ->where('status', 'published')
             ->where('is_archived', $isArchived)
             ->with(['categories', 'media'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-        $topPosts = Post::where('status', 'published')
-            ->where('is_archived', $isArchived)
-            ->orderBy('created_at', 'desc')
-            ->with(['categories', 'media'])
-            ->limit(8)
-            ->get();
+        $topPosts = $this->getTopStories($isArchived, 8);
 
         return view('front.search')->withPosts($posts)->withSearch($tag)->withTopPosts($topPosts);
     }
@@ -255,12 +284,7 @@ class FrontController extends Controller
     public function post($id)
     {
         $post = Post::with(['user', 'categories', 'media'])->findOrFail($id);
-        $topPosts = Post::where('status', 'published')
-            ->where('is_archived', Helper::getIsArchivedValue())
-            ->orderBy('created_at', 'desc')
-            ->with(['categories', 'media'])
-            ->limit(8)
-            ->get();
+        $topPosts = $this->getTopStories(Helper::getIsArchivedValue(), 8);
 
         return view('front.post')
             ->withPost($post)

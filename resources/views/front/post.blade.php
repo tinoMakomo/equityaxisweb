@@ -4,19 +4,33 @@
 @section('meta_description', $post->excerpt)
 
 @section('content')
+    <div id="reading-progress" aria-hidden="true"></div>
+    @php
+        $wordCount = str_word_count(strip_tags((string) $post->body));
+        $readMinutes = max(1, (int) ceil($wordCount / 220));
+    @endphp
     <div class="row mt-3">
 
         <div class="col-md-8 post-type-zero">
-            <h2>{{ $post->title }}</h2>
-            <h6 class="small mt-3 text-muted mb-3">
+            @if ($post->categories->count())
+                <div class="mb-2">
+                    <a href="{{ Helper::getCategoryRouteForPost($post) }}" class="category-badge">{{ $post->getCategory() }}</a>
+                </div>
+            @endif
+            <h1 class="article-title">{{ $post->title }}</h1>
+            <h6 class="small mt-3 text-muted mb-3 article-meta">
                 @if ($post->user)
-                    By <a href="{{ route('author', [$post->user->id, $post->user->getSlug()]) }}" class="text-primary">{{ $post->user->name }}</a>,
+                    By <a href="{{ route('author', [$post->user->id, $post->user->getSlug()]) }}" class="text-primary">{{ $post->user->name }}</a>
                 @else
-                    By <span class="text-primary">Equity Axis</span>,
+                    By <span class="text-primary">Equity Axis</span>
                 @endif
-                <span class="">{{ \Helper::getFormattedPostDate($post) }}</span>
+                <span class="mx-1">&bull;</span>
+                <span>{{ \Helper::getFormattedPostDate($post) }}</span>
+                <span class="mx-1">&bull;</span>
+                <span>{{ $readMinutes }} min read</span>
             </h6>
-            <div class="featured my-3" style="background: no-repeat center/cover url({{ $post->featuredImage() }})">
+            <div class="featured my-3">
+                <img src="{{ $post->featuredImage() }}" alt="{{ $post->title }}" loading="eager" fetchpriority="high" decoding="async">
             </div>
             <div class="post-content">
                 {!! \Helper::injectInArticleAd($post->body) !!}
@@ -32,7 +46,7 @@
                 </div>
             @endif
             <a href="{{ Helper::getAdUrl('in_article') }}">
-                <img src="{{ Helper::getAd('in_article') }}" class="img ad w-100 mb-2">
+                <img src="{{ Helper::getAd('in_article') }}" alt="Advertisement" loading="lazy" decoding="async" class="img ad w-100 mb-2">
             </a>
         </div>
         <div class="col-md-4">

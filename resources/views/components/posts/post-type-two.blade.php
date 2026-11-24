@@ -1,6 +1,8 @@
 <div class="post-type-two">
     <a href="{{ Helper::getRouteForPost($post) }}">
-        <div class="featured" style="background:no-repeat center/cover url({{ $post->featuredImage() }})"></div>
+        <div class="featured">
+            <img src="{{ $post->featuredImage() }}" alt="{{ $post->title }}" loading="eager" fetchpriority="high" decoding="async">
+        </div>
     </a>
     <div class="title">
         <h5>Editor's Pick</h5>

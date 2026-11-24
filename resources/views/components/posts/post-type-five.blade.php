@@ -2,8 +2,8 @@
     <div class="row">
         <div class="col-md-4">
             <a href="{{ Helper::getRouteForPost($post) }}">
-                <div class="featured"
-                    style="background: no-repeat center/cover url({{ $post->thumbnailSmall() }})">
+                <div class="featured">
+                    <img src="{{ $post->thumbnailSmall() }}" alt="{{ $post->title }}" loading="lazy" decoding="async">
                 </div>
             </a>
         </div>

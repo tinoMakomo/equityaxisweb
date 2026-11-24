@@ -1,11 +1,12 @@
 <div class="post-type-seven">
     <h6 class="small"><a href="{{ Helper::getCategoryRouteForPost($post) }}"
-            class="text-primary-darker">{{ $post->getCategory() }}</a></h6>
+            class="text-primary-darker category-badge">{{ $post->getCategory() }}</a></h6>
     <h5><a class="line-clamp-2" href="{{ Helper::getRouteForPost($post) }}">{{ $post->title }}</a></h5>
     <div class="row">
         <div class="col-md-4">
             <a href="{{ Helper::getRouteForPost($post) }}">
-                <div class="featured" style="background: no-repeat center/cover url({{ $post->thumbnailSmall() }})">
+                <div class="featured">
+                    <img src="{{ $post->thumbnailSmall() }}" alt="{{ $post->title }}" loading="lazy" decoding="async">
                 </div>
             </a>
         </div>
