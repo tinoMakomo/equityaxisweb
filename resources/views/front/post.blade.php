@@ -19,7 +19,7 @@
             <div class="featured my-3" style="background: no-repeat center/cover url({{ $post->featuredImage() }})">
             </div>
             <div class="post-content">
-                {!! $post->body !!}
+                {!! \Helper::injectInArticleAd($post->body) !!}
             </div>
             <hr>
             @if ($post->tags())

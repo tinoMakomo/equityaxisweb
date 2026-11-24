@@ -52,6 +52,7 @@
 
         </div>
     </div>
+    @include('includes.adsense-unit', ['type' => 'in-feed'])
     <div class="row mt-3">
         @if ($posts->count() >= 12)
             @foreach ($posts->slice(11, 8) as $post)

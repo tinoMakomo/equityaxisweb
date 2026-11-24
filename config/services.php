@@ -30,4 +30,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'adsense' => [
+        'client' => env('ADSENSE_CLIENT', 'ca-pub-9964245073949816'),
+        'in_feed_slot' => env('ADSENSE_IN_FEED_SLOT', ''),
+        'in_article_slot' => env('ADSENSE_IN_ARTICLE_SLOT', ''),
+    ],
+
 ];

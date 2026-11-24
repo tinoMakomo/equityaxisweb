@@ -2,6 +2,9 @@
     <div class="col-md-8">
         @foreach ($posts as $post)
             <x-posts.post-type-nine :post="$post" />
+            @if ($loop->iteration % 4 === 0 && !$loop->last)
+                @include('includes.adsense-unit', ['type' => 'in-feed'])
+            @endif
         @endforeach
 
         <div class="my-5">

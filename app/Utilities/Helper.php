@@ -165,4 +165,46 @@ class Helper
     public static function getFormattedPostDate($post){
         return $post->created_at->diffInHours(now()->subDays(1)) > 24 ? $post->created_at->format('M d, Y') : $post->created_at->diffForHumans();
     }
+
+    /**
+     * Inject an AdSense in-article ad unit after the Nth paragraph of an article body
+     * when ADSENSE_IN_ARTICLE_SLOT is configured.
+     */
+    public static function injectInArticleAd(?string $html, int $afterParagraph = 3): string
+    {
+        $html = (string) $html;
+        $client = config('services.adsense.client');
+        $slot = config('services.adsense.in_article_slot');
+
+        if (empty($client) || empty($slot) || stripos($html, '</p>') === false) {
+            return $html;
+        }
+
+        $adMarkup = view('includes.adsense-unit', [
+            'type' => 'in-article',
+            'slot' => $slot,
+        ])->render();
+
+        $parts = preg_split('/(<\/p>)/i', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (!$parts || count($parts) <= ($afterParagraph * 2)) {
+            return $html . $adMarkup;
+        }
+
+        $output = '';
+        $paragraphCount = 0;
+        $inserted = false;
+
+        foreach ($parts as $part) {
+            $output .= $part;
+            if (!$inserted && strcasecmp($part, '</p>') === 0) {
+                $paragraphCount++;
+                if ($paragraphCount === $afterParagraph) {
+                    $output .= $adMarkup;
+                    $inserted = true;
+                }
+            }
+        }
+
+        return $output;
+    }
 }
