@@ -70,6 +70,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/admin_posts/trash/index', [PostController::class, 'trash'])->name('admin_posts.trash.index');
     Route::post('/admin_posts/restore/{id}', [PostController::class, 'restore'])->name('admin_posts.restore');
     Route::post('/admin_posts/force_delete/{id}', [PostController::class, 'forceDelete'])->name('admin_posts.force_delete');
+    Route::get('/media/library', [PostController::class, 'mediaLibrary'])->name('admin.media.library');
 
 
 

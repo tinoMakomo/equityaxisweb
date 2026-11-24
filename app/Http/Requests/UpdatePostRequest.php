@@ -34,6 +34,7 @@ class UpdatePostRequest extends FormRequest
             'is_archived' => 'nullable|boolean',
             'author' => 'required|numeric',
             'featured_image' => 'nullable|image|max:2048',
+            'existing_media_id' => 'nullable|integer|exists:media,id',
             'publish_at' => 'nullable|date',
         ];
     }

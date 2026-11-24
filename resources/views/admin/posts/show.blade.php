@@ -123,18 +123,7 @@
                                                     @enderror
                                                 </div>
                                             @endif
-                                            <div class="form-group">
-                                                <label for="featured_image">Featured Image *</label>
-                                                <div class="custom-file">
-                                                    <input type="file" class="custom-file-input" id="featured_image"
-                                                        name="featured_image">
-                                                    <label class="custom-file-label" for="featured_image">Choose
-                                                        file</label>
-                                                </div>
-                                                @error('featured_image')
-                                                    <span class="text-danger">{{ $message }}</span>
-                                                @enderror
-                                            </div>
+                                            @include('admin.includes.featured-image-picker', ['isEdit' => true])
                                             <div class="form-group">
                                                 <label for="tags">Tags [Optional]</label>
                                                 <select name="tags[]" id="tags" class="form-control"
@@ -297,4 +286,5 @@
             bsCustomFileInput.init();
         });
     </script>
+    @stack('featured_image_picker_scripts')
 @endsection

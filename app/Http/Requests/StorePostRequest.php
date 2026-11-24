@@ -29,12 +29,20 @@ class StorePostRequest extends FormRequest
             'status' => 'required|string',
             'excerpt' => 'required|string|min:160|max:200',
             'categories' => 'required|array',
-            'featured_image' => 'required|image|max:2048',
+            'featured_image' => 'required_without:existing_media_id|nullable|image|max:2048',
+            'existing_media_id' => 'nullable|integer|exists:media,id',
             'tags' => 'nullable|array',
             'editors_pick' => 'nullable|boolean',
             'author' => 'required|numeric',
             'is_archived' => 'nullable|boolean',
             'publish_at' => 'nullable|date|after:now',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'featured_image.required_without' => 'Please upload a featured image or choose one from already uploaded photos.',
         ];
     }
 }

@@ -5,12 +5,11 @@ namespace App\Http\Controllers\Admin;
 use Carbon\Carbon;
 use App\Models\Post;
 use App\Utilities\Helper;
-use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
-use App\Http\Requests\ChangePostPasswordRequest;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class PostController extends Controller
 {
@@ -73,11 +72,7 @@ class PostController extends Controller
             ]);
         }
 
-        if ($request->hasFile('featured_image')) {
-            $post->clearMediaCollection('featured');
-            $post->addMediaFromRequest('featured_image')
-                ->toMediaCollection('featured');
-        }
+        $this->attachFeaturedImage($post, $request);
 
         $post->categories()->sync($request->input('categories'));
         Helper::clearSiteCache();
@@ -156,11 +151,7 @@ class PostController extends Controller
 
         $post->categories()->sync($request->input('categories'));
 
-        if ($request->hasFile('featured_image')) {
-            $post->clearMediaCollection('featured');
-            $post->addMediaFromRequest('featured_image')
-                ->toMediaCollection('featured');
-        }
+        $this->attachFeaturedImage($post, $request);
 
         Helper::clearSiteCache();
 
@@ -207,5 +198,98 @@ class PostController extends Controller
         $post->restore();
         Helper::clearSiteCache();
         return redirect()->route('admin_posts.index')->with(['success-message' => "Post restored successfully."]);
+    }
+
+    /**
+     * Return paginated, deduplicated previously uploaded post images for the admin picker modal.
+     */
+    public function mediaLibrary(Request $request)
+    {
+        $search = trim((string) $request->input('q', ''));
+        $perPage = min(max((int) $request->input('per_page', 24), 6), 48);
+
+        $latestIdsQuery = Media::query()
+            ->selectRaw('MAX(media.id) as id')
+            ->leftJoin('posts', function ($join) {
+                $join->on('posts.id', '=', 'media.model_id')
+                    ->where('media.model_type', '=', Post::class);
+            })
+            ->where('media.model_type', Post::class)
+            ->where('media.collection_name', 'featured')
+            ->where('media.mime_type', 'like', 'image/%')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($sub) use ($search) {
+                    $sub->where('media.name', 'like', "%{$search}%")
+                        ->orWhere('media.file_name', 'like', "%{$search}%")
+                        ->orWhere('posts.title', 'like', "%{$search}%");
+                });
+            })
+            ->groupBy('media.file_name', 'media.size');
+
+        $paginator = Media::query()
+            ->whereIn('media.id', $latestIdsQuery)
+            ->orderBy('media.id', 'desc')
+            ->paginate($perPage);
+
+        $postIds = $paginator->getCollection()->pluck('model_id')->unique()->filter()->values();
+        $postTitles = Post::withTrashed()->whereIn('id', $postIds)->pluck('title', 'id');
+
+        $items = $paginator->getCollection()->map(function (Media $media) use ($postTitles) {
+            $thumbUrl = $media->hasGeneratedConversion('thumb-sm')
+                ? $media->getFullUrl('thumb-sm')
+                : $media->getFullUrl();
+
+            return [
+                'id' => $media->id,
+                'name' => $media->name,
+                'file_name' => $media->file_name,
+                'post_title' => $postTitles[$media->model_id] ?? '',
+                'thumb_url' => $thumbUrl,
+                'full_url' => $media->getFullUrl(),
+                'created_at' => optional($media->created_at)->format('M d, Y'),
+            ];
+        })->values();
+
+        return response()->json([
+            'data' => $items,
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'total' => $paginator->total(),
+        ]);
+    }
+
+    /**
+     * Attach either a newly uploaded featured image or a copy of an already-uploaded media item.
+     */
+    protected function attachFeaturedImage(Post $post, Request $request): void
+    {
+        if ($request->hasFile('featured_image')) {
+            $post->clearMediaCollection('featured');
+            $post->addMediaFromRequest('featured_image')
+                ->toMediaCollection('featured');
+            return;
+        }
+
+        if ($request->filled('existing_media_id')) {
+            $sourceMedia = Media::where('id', (int) $request->input('existing_media_id'))
+                ->where('model_type', Post::class)
+                ->first();
+
+            if (!$sourceMedia) {
+                return;
+            }
+
+            // Already attached to this post in the featured collection
+            if ((int) $sourceMedia->model_id === (int) $post->id && $sourceMedia->collection_name === 'featured') {
+                return;
+            }
+
+            $oldMediaIds = $post->getMedia('featured')->pluck('id')->all();
+            $copied = $sourceMedia->copy($post, 'featured');
+
+            if ($copied && !empty($oldMediaIds)) {
+                Media::whereIn('id', $oldMediaIds)->get()->each->delete();
+            }
+        }
     }
 }
