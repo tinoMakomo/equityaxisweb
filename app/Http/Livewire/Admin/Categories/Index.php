@@ -25,11 +25,20 @@ class Index extends Component
 
     public function render()
     {
-        $itemsPerPage = auth()->user()->preferences->items_per_page;
+        $itemsPerPage = optional(auth()->user()->preferences)->items_per_page ?? 15;
+        $allowedOrderFields = ['id', 'name', 'description', 'parent', 'display_in_navbar', 'updated_at'];
+        $orderByField = in_array($this->orderByField, $allowedOrderFields, true) ? $this->orderByField : 'id';
+        $orderByDirection = strtolower($this->orderByDirection) === 'asc' ? 'asc' : 'desc';
+        $search = trim((string) $this->search);
 
-        $categories = Category::orderBy($this->orderByField, $this->orderByDirection)
-            ->where('name', 'like', '%' . $this->search . '%')
-            ->orWhere('description', 'like', '%' . $this->search . '%')
+        $categories = Category::with('parentModel:id,name')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('description', 'like', '%' . $search . '%');
+                });
+            })
+            ->orderBy($orderByField, $orderByDirection)
             ->paginate($itemsPerPage);
 
         return view('livewire.admin.categories.index')->withcategories($categories);

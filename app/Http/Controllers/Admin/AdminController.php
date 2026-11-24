@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Post;
+use App\Models\Category;
+use App\Models\Subscriber;
+use App\Utilities\Helper;
 use App\Http\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\UpdatePreferenceRequest;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class AdminController extends Controller
 {
@@ -19,8 +25,18 @@ class AdminController extends Controller
 
     public function index()
     {
-        // return redirect()->action([PostController::class, 'index']);
-        return view('admin.index');
+        $version = Helper::getCacheVersion();
+        $stats = Cache::remember("site:v{$version}:admin_stats", 300, function () {
+            return [
+                'published_posts' => Post::where('status', 'published')->count(),
+                'draft_posts' => Post::where('status', 'draft')->count(),
+                'categories' => Category::count(),
+                'subscribers' => Subscriber::count(),
+                'media_files' => Media::where('model_type', Post::class)->count(),
+            ];
+        });
+
+        return view('admin.index')->withStats($stats);
     }
 
     public function profile()

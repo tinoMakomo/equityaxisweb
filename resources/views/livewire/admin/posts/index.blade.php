@@ -76,7 +76,15 @@
                         <td>{{ $post->id }}</td>
                         <td>{{ Str::limit($post->title, 50) }}</td>
                         <td>{{ optional($post->user)->name ?? 'Unknown' }}</td>
-                        <td>{{ $post->getStatus() }}</td>
+                        <td>
+                            @if ($post->status === 'published')
+                                <span class="badge badge-success">{{ $post->getStatus() }}</span>
+                            @elseif ($post->status === 'draft')
+                                <span class="badge badge-warning">{{ $post->getStatus() }}</span>
+                            @else
+                                <span class="badge badge-secondary">{{ $post->getStatus() }}</span>
+                            @endif
+                        </td>
                         <td>{{ $post->updated_at->diffForHumans() }}</td>
                         <td class="project-actions text-right">
                             <a class="btn btn-primary" href="{{ route('short', $post->id) }}" target="_blank">

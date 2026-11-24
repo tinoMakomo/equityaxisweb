@@ -25,12 +25,21 @@ class Index extends Component
 
     public function render()
     {
-        $itemsPerPage = auth()->user()->preferences->items_per_page;
+        $itemsPerPage = optional(auth()->user()->preferences)->items_per_page ?? 15;
+        $allowedOrderFields = ['id', 'full_name', 'email', 'company', 'updated_at', 'created_at'];
+        $orderByField = in_array($this->orderByField, $allowedOrderFields, true) ? $this->orderByField : 'id';
+        $orderByDirection = strtolower($this->orderByDirection) === 'asc' ? 'asc' : 'desc';
+        $search = trim((string) $this->search);
 
-        $subscribers = Subscriber::orderBy($this->orderByField, $this->orderByDirection)
-            ->where('full_name', 'like', '%' . $this->search . '%')
-            ->orWhere('email', 'like', '%' . $this->search . '%')
-            ->orWhere('company', 'like', '%' . $this->search . '%')
+        $subscribers = Subscriber::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($sub) use ($search) {
+                    $sub->where('full_name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%')
+                        ->orWhere('company', 'like', '%' . $search . '%');
+                });
+            })
+            ->orderBy($orderByField, $orderByDirection)
             ->paginate($itemsPerPage);
 
         return view('livewire.admin.subscribers.index')->withsubscribers($subscribers);

@@ -25,10 +25,20 @@ class Index extends Component
 
     public function render()
     {
-        $itemsPerPage = auth()->user()->preferences->items_per_page;
+        $itemsPerPage = optional(auth()->user()->preferences)->items_per_page ?? 15;
+        $allowedOrderFields = ['id', 'preset', 'link', 'updated_at'];
+        $orderByField = in_array($this->orderByField, $allowedOrderFields, true) ? $this->orderByField : 'id';
+        $orderByDirection = strtolower($this->orderByDirection) === 'asc' ? 'asc' : 'desc';
+        $search = trim((string) $this->search);
 
-        $ads = Ad::orderBy($this->orderByField, $this->orderByDirection)
-            ->where('link', 'like', '%' . $this->search . '%')
+        $ads = Ad::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($sub) use ($search) {
+                    $sub->where('link', 'like', '%' . $search . '%')
+                        ->orWhere('preset', 'like', '%' . $search . '%');
+                });
+            })
+            ->orderBy($orderByField, $orderByDirection)
             ->paginate($itemsPerPage);
 
         return view('livewire.admin.ads.index')->withads($ads);

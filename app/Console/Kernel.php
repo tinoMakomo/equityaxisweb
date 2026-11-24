@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('backup:clean')->dailyAt('01:00');
         $schedule->command('backup:run')->dailyAt('01:30');
         $schedule->command('sitemap:generate')->dailyAt('02:00');
+        $schedule->command('media:deduplicate --apply')->weeklyOn(0, '03:00');
     }
 
     /**

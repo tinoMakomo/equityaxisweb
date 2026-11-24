@@ -25,11 +25,20 @@ class Index extends Component
 
     public function render()
     {
-        $itemsPerPage = auth()->user()->preferences->items_per_page;
+        $itemsPerPage = optional(auth()->user()->preferences)->items_per_page ?? 15;
+        $allowedOrderFields = ['id', 'name', 'email', 'user_type_id', 'updated_at'];
+        $orderByField = in_array($this->orderByField, $allowedOrderFields, true) ? $this->orderByField : 'id';
+        $orderByDirection = strtolower($this->orderByDirection) === 'asc' ? 'asc' : 'desc';
+        $search = trim((string) $this->search);
 
-        $users = User::orderBy($this->orderByField, $this->orderByDirection)
-            ->where('name', 'like', '%' . $this->search . '%')
-            ->orWhere('email', 'like', '%' . $this->search . '%')
+        $users = User::with('userType:id,name')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
+                });
+            })
+            ->orderBy($orderByField, $orderByDirection)
             ->paginate($itemsPerPage);
 
         return view('livewire.admin.users.index')->withusers($users);

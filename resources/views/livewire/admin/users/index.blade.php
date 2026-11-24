@@ -16,7 +16,7 @@
             <a class="btn btn-primary" href="{{ route('admin_users.create') }}">
                 <i class="fas fa-plus">
                 </i>
-                Ad New User
+                Add New User
             </a>
         </h3>
     </div>
@@ -71,7 +71,7 @@
                         <td>{{ $user->id }}</td>
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
-                        <td>{{ $user->userType->name }}</td>
+                        <td>{{ optional($user->userType)->name ?? '—' }}</td>
                         <td>{{ $user->updated_at->diffForHumans() }}</td>
                         <td class="project-actions text-right">
                             <a class="btn btn-primary" href="{{ route('admin_users.show', $user->id) }}">

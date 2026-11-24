@@ -16,7 +16,7 @@
             <a class="btn btn-primary" href="{{ route('admin_categories.create') }}">
                 <i class="fas fa-plus">
                 </i>
-                Ad New Category
+                Add New Category
             </a>
         </h3>
     </div>

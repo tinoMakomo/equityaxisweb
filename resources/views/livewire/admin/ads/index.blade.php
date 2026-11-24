@@ -16,7 +16,7 @@
             <a class="btn btn-primary" href="{{ route('admin_ads.create') }}">
                 <i class="fas fa-plus">
                 </i>
-                Ad New Ad
+                Add New Ad
             </a>
         </h3>
     </div>

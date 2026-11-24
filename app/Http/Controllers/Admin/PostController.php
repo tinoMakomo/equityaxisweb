@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Post;
 use App\Utilities\Helper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
@@ -88,14 +89,16 @@ class PostController extends Controller
      */
     public function show(int $id)
     {
-        $post = Post::findOrFail($id);
+        $post = Post::with(['user', 'categories', 'media'])->findOrFail($id);
         if (auth()->user()->isAuthor()) {
             if ($post->user_id != auth()->user()->id) {
                 abort(404);
             }
         }
 
-        $meta = Helper::getViewsForPost($post);
+        $meta = Cache::remember("post:views:{$post->id}", 900, function () use ($post) {
+            return Helper::getViewsForPost($post);
+        });
 
         return view('admin.posts.show')->withPost($post)->withMeta($meta);
     }

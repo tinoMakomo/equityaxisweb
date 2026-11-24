@@ -25,12 +25,14 @@ class Index extends Component
     public function render()
     {
         $itemsPerPage = optional(auth()->user()->preferences)->items_per_page ?? 15;
-        $allowedOrderFields = ['id', 'title', 'status', 'updated_at', 'created_at'];
+        $allowedOrderFields = ['id', 'title', 'user_id', 'status', 'updated_at', 'created_at'];
         $orderByField = in_array($this->orderByField, $allowedOrderFields, true) ? $this->orderByField : 'id';
         $orderByDirection = strtolower($this->orderByDirection) === 'asc' ? 'asc' : 'desc';
         $search = trim((string) $this->search);
 
-        $query = Post::with('user')->orderBy($orderByField, $orderByDirection);
+        $query = Post::select(['id', 'title', 'user_id', 'status', 'updated_at'])
+            ->with('user:id,name')
+            ->orderBy($orderByField, $orderByDirection);
 
         if (auth()->user()->isAuthor()) {
             $query->where('user_id', auth()->user()->id)
