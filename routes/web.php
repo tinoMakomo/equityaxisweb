@@ -26,7 +26,7 @@ Route::get('privacy-policy', [FrontController::class, 'privacy'])->name('privacy
 Route::get('cookies-policy', [FrontController::class, 'cookies'])->name('cookies');
 Route::get('disclaimer', [FrontController::class, 'disclaimer'])->name('disclaimer');
 Route::get('contact', [FrontController::class, 'contact'])->name('contact');
-Route::post('contact', [FrontController::class, 'contactSubmit'])->name('contact');
+Route::post('contact', [FrontController::class, 'contactSubmit'])->name('contact.submit');
 Route::get('contact/success', [FrontController::class, 'contactSuccess'])->name('contact.success');
 
 Route::get('/services', [FrontController::class, 'services'])->name('services');
@@ -35,7 +35,7 @@ Route::get('/careers', [FrontController::class, 'careers'])->name('careers');
 Route::get('/help-centre', [FrontController::class, 'helpCentre'])->name('help-centre');
 
 Route::get('/login', [AdminController::class, 'login'])->name('login');
-Route::post('/login', [AdminController::class, 'authenticate'])->name('login');
+Route::post('/login', [AdminController::class, 'authenticate'])->name('login.authenticate');
 
 Route::get('/', [FrontController::class, 'index'])->name('index');
 Route::get('/category/{id}/{category?}', [FrontController::class, 'category'])->name('category');

@@ -16,10 +16,6 @@ use App\Http\Controllers\Api\CategoryApiController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 // Posts
 Route::get('/posts',              [PostApiController::class, 'index']);
 Route::get('/posts/latest',       [PostApiController::class, 'latest']);
