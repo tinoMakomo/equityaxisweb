@@ -4,6 +4,7 @@ namespace App\Models;
 
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Laravel\Scout\Searchable;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +18,37 @@ use Typesense\LaravelTypesense\Interfaces\TypesenseDocument;
 
 class Post extends Model implements HasMedia, TypesenseDocument
 {
-    use InteractsWithMedia, HasFactory, Sluggable, Searchable, SoftDeletes;
+    use InteractsWithMedia, HasFactory, Sluggable, SoftDeletes;
+    use Searchable {
+        queueMakeSearchable as protected scoutQueueMakeSearchable;
+        queueRemoveFromSearch as protected scoutQueueRemoveFromSearch;
+    }
+
+    /**
+     * Sync post updates to Typesense without breaking post creation/editing if Typesense is lagging or unavailable.
+     */
+    public function queueMakeSearchable($models)
+    {
+        try {
+            return $this->scoutQueueMakeSearchable($models);
+        } catch (\Throwable $e) {
+            Log::warning('Typesense index update skipped: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Sync post deletions to Typesense without breaking post deletion if Typesense is lagging or unavailable.
+     */
+    public function queueRemoveFromSearch($models)
+    {
+        try {
+            return $this->scoutQueueRemoveFromSearch($models);
+        } catch (\Throwable $e) {
+            Log::warning('Typesense index delete skipped: ' . $e->getMessage());
+            return null;
+        }
+    }
 
     /**
      * Return the sluggable configuration array for this model.

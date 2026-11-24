@@ -151,9 +151,9 @@ return [
             'path'     => '',
             'protocol' => 'http',
         ],
-        'connection_timeout_seconds'   => 2,
+        'connection_timeout_seconds'   => env('TYPESENSE_TIMEOUT', 2),
         'healthcheck_interval_seconds' => 30,
-        'num_retries'                  => 30,
-        'retry_interval_seconds'       => 1,
+        'num_retries'                  => env('TYPESENSE_RETRIES', 2),
+        'retry_interval_seconds'       => 0.5,
     ],
 ];
