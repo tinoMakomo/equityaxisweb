@@ -1,0 +1,74 @@
+.brand-logo {
+    height: 60px;
+    margin-right: 10px;
+    margin-left: 14px;
+}
+
+.user-panel .image i {
+    background: #eeee;
+    padding: 10px;
+    border-radius: 50%;
+    height: 35px;
+    width: 35px;
+    text-align: center;
+}
+
+.btn {
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.messages-alert {
+    margin: 0 1rem 1rem 1rem;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    border-color: #005180;
+}
+
+.dark-mode .user-panel .image i {
+    background-color: unset;
+}
+
+.dark-mode a {
+    color: #fff;
+}
+
+.dark-mode a:hover {
+    color: #a4bad1 !important;
+}
+
+.loading-table {
+    background-color: #999;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background-color: #9999996b;
+    content: "";
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    z-index: 11;
+}
+
+.loading-table .inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.loading-table i {
+    font-size: 50px;
+}
+
+.sidebar-collapse .brand-logo {
+    height: 40px;
+    margin-right: 10px;
+    margin-left: 14px;
+}
+
+.cursor-pointer {
+    cursor: pointer !important;
+}
